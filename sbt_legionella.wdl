@@ -12,7 +12,7 @@ workflow sbt_analysis {
     File? assembly
     File? read1 
     File? read2
-    String docker = "staphb/elgato:1.15.2"
+    String docker = "staphb/elgato:1.21.2"
   }
 
     if (
