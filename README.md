@@ -9,7 +9,6 @@ This WDL workflow runs **ElGato** (Sequence-Based Typing) analysis on either pai
 - Docker or Singularity
 - Input files: Either
   - `read1` and `read2` (paired-end reads)
-  - or `assembly` (assembled genome)
 - The samplename
 
 ## 🚀 Usage
