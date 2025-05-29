@@ -1,6 +1,12 @@
 version 1.0
 
 workflow sbt_analysis {
+  meta {
+      description: "SBT Legionella pneumophila isolates using the el_gato tool."
+      author: "David Maimoun"
+      organization: "MOH Jerusalem"
+  }
+
   input {
     String samplename
     File? assembly
@@ -9,12 +15,16 @@ workflow sbt_analysis {
     String docker = "staphb/elgato:1.15.2"
   }
 
-  call validate_inputs {
-    input:
-      assembly = assembly,
-      read1 = read1,
-      read2 = read2
-  }
+    if (
+    (defined(read1) && defined(assembly)) ||
+    (defined(read2) && defined(assembly)) ||
+    (defined(read1) && defined(read2) && defined(assembly))
+    ) {
+        call error_inputs {
+            input:
+                error_message = "ERROR: Provide only either reads('read1' and 'read2'), or 'assembly' (fasta file) but not both."
+        }
+    }
 
   
   call elgato_reads {
@@ -80,25 +90,16 @@ task elgato_reads {
   }
 }
 
-task validate_inputs {
-  File? assembly
-  File? read1
-  File? read2
+task error_inputs {
 
-  command <<<
-    if [[ -n "${assembly}" && ( -n "${read1}" || -n "${read2}" ) ]]; then
-      echo "ERROR: Provide either assembly or read1/read2, not both." >&2
+  input {
+    String error_message
+  }
+    
+    command <<<
+      echo "~{error_message}" >&2
       exit 1
-    fi
-
-    if [[ -n "${read1}" && -z "${read2}" ]] || [[ -z "${read1}" && -n "${read2}" ]]; then
-      echo "ERROR: Both read1 and read2 must be provided together." >&2
-      exit 1
-    fi
-
-    echo "Inputs validated"
-  >>>
-
+    >>>
 
   runtime {
     docker: "debian:bookworm-slim"
