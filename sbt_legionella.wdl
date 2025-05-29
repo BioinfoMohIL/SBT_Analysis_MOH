@@ -9,29 +9,16 @@ workflow sbt_analysis {
 
   input {
     String samplename
-    File? assembly
-    File? read1 
-    File? read2
+    File read1 
+    File read2
     String docker = "staphb/elgato:1.21.2"
   }
 
-    if (
-      (defined(read1) && defined(assembly)) ||
-      (defined(read2) && defined(assembly)) ||
-      (defined(read1) && defined(read2) && defined(assembly))
-    ) {
-        call error_inputs {
-            input:
-                error_message = "ERROR: Provide only either reads('read1' and 'read2'), or 'assembly' (fasta file) but not both."
-        }
-    }
-
-  
+   
   call elgato_reads {
     input:
       read1       = read1,
       read2       = read2,
-      assembly    = assembly,
       samplename  = samplename,
       docker      = docker
   }
@@ -48,25 +35,18 @@ workflow sbt_analysis {
 
 task elgato_reads {
   input {
-    File? read1
-    File? read2
-    File? assembly
+    File read1
+    File read2
     String samplename
     String docker
   }
 
   command <<<
     el_gato.py -v > VERSION
-
-    if [[ -n "~{read1}" && -n "~{read2}" ]]; then
-      el_gato.py --read1 ~{read1} --read2 ~{read2} --out ./out
-    elif [[ -n "~{assembly}" ]]; then
-      el_gato.py --assembly ~{assembly} --out ./out
-    else
-      echo "Missing inputs: Either both reads or an assembly file must be provided." >&2
-      exit 1
-    fi
-
+    
+    el_gato.py --read1 ~{read1} --read2 ~{read2} --out ./out
+  
+  
     st=$(awk -F "\t" 'NR==2 {print $2}' ./out/possible_mlsts.txt)
     if [ -z "$st" ]; then
       st="No ST predicted!"
@@ -95,20 +75,4 @@ task elgato_reads {
   }
 }
 
-task error_inputs {
-
-  input {
-    String error_message
-  }
-    
-    command <<<
-      echo "~{error_message}" >&2
-      exit 1
-    >>>
-
-  runtime {
-    docker: "debian:bookworm-slim"
-
-  }
-}
 
