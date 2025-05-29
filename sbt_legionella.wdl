@@ -16,9 +16,9 @@ workflow sbt_analysis {
   }
 
     if (
-    (defined(read1) && defined(assembly)) ||
-    (defined(read2) && defined(assembly)) ||
-    (defined(read1) && defined(read2) && defined(assembly))
+      (defined(read1) && defined(assembly)) ||
+      (defined(read2) && defined(assembly)) ||
+      (defined(read1) && defined(read2) && defined(assembly))
     ) {
         call error_inputs {
             input:
@@ -47,11 +47,13 @@ workflow sbt_analysis {
 
 
 task elgato_reads {
-  File? read1
-  File? read2
-  File? assembly
-  String samplename
-  String docker
+  input {
+    File? read1
+    File? read2
+    File? assembly
+    String samplename
+    String docker
+  }
 
   command <<<
     el_gato.py -v > VERSION
