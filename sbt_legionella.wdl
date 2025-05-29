@@ -58,10 +58,13 @@ task elgato_reads {
   command <<<
     el_gato.py -v > VERSION
 
-    if [[ -n ~{read1} ]];then
+    if [[ -n "~{read1}" && -n "~{read2}" ]]; then
       el_gato.py --read1 ~{read1} --read2 ~{read2} --out ./out
-    else
+    elif [[ -n "~{assembly}" ]]; then
       el_gato.py --assembly ~{assembly} --out ./out
+    else
+      echo "Missing inputs: Either both reads or an assembly file must be provided." >&2
+      exit 1
     fi
 
     st=$(awk -F "\t" 'NR==2 {print $2}' ./out/possible_mlsts.txt)
